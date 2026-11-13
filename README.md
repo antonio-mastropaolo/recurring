@@ -32,54 +32,19 @@
 
 ### Menu-Bar Popover & Core Tool Surfaces
 
-<table>
-  <tr>
-    <td width="39%" valign="top" align="center">
-      <img src="docs/screenshots/menubar-popover.png" width="360" alt="Recurring v3 Menu-Bar Popover" />
-      <br />
-      <sub><strong>Instant Menu-Bar Triage</strong> — Live <code>$/mo</code> status-bar ticker, 7-day due strip, $50+ cancel-by alerts &amp; 1-click surface switcher.</sub>
-    </td>
-    <td width="61%" valign="top">
-      <table>
-        <tr>
-          <td width="52" align="center" valign="top"><img src="docs/icons/tool-ledger.svg" width="36" height="36" alt="Ledger" /></td>
-          <td>
-            <strong><code>01 · Ledger &amp; Insights</code></strong><br />
-            Models fixed subscriptions, metered usage bills, annual renewals, and prepaid terms (<code>term_start → term_end</code> amortized across active days). Includes a 30-day cancel-by radar, overlap cut detector, 20-week daily charge heatmap, card/account attribution, post-cancel watch, and refund claim tracking.
-          </td>
-        </tr>
-        <tr>
-          <td width="52" align="center" valign="top"><img src="docs/icons/tool-vault.svg" width="36" height="36" alt="API Vault" /></td>
-          <td>
-            <strong><code>02 · Vault · API Keys</code></strong><br />
-            Envelope-encrypted keyring (<code>Argon2id</code> + <code>AES-256-GCM</code> with AAD binding) supporting canonical <strong><code>Admin key</code></strong> &amp; <strong><code>Org key</code></strong> tiers, live HTTPS endpoint health sweeps, atomic key rotation, <code>~/Projects</code> <code>.env</code> provenance + git-leak scanning, and 1-command Sentinel import.
-          </td>
-        </tr>
-        <tr>
-          <td width="52" align="center" valign="top"><img src="docs/icons/tool-sync.svg" width="36" height="36" alt="Invoice Sync" /></td>
-          <td>
-            <strong><code>03 · Invoice Sync (syncd)</code></strong><br />
-            Persistent LaunchAgent combining <code>TLS IMAP IDLE</code> push sockets, 20s Gmail <code>historyId</code> delta polling, Exchange/OWA auto-forward rules, and an hourly sweep. Collapses duplicate merchant receipts, Apple/Play bills, and bank alerts into clean ledger entries.
-          </td>
-        </tr>
-        <tr>
-          <td width="52" align="center" valign="top"><img src="docs/icons/tool-reimburse.svg" width="36" height="36" alt="Reimburse" /></td>
-          <td>
-            <strong><code>04 · Reimburse (wm-cloud)</code></strong><br />
-            Deterministic receipt packet compiler across any <code>[since .. until]</code> window. Rejects unpaid <code>"Amount due"</code> invoices, blocks double-submissions against prior sent batches, pairs 1:1 IT approvals, runs a 5-point byte/page PDF verify gate, and writes <code>&lt;slug&gt;.zip</code> + <code>approval-notice.txt</code> locally.
-          </td>
-        </tr>
-        <tr>
-          <td width="52" align="center" valign="top"><img src="docs/icons/tool-cli.svg" width="36" height="36" alt="CLI" /></td>
-          <td>
-            <strong><code>$ recurring</code> Headless CLI &amp; Snapshot Engine</strong><br />
-            <code>flock</code>-synchronized terminal mutations reflected in the live SwiftUI app in <code>&lt;80ms</code> via kernel <code>DispatchSource</code> VNODE watch, plus headless <code>@2x</code> Retina PNG snapshot generation (<code>--snapshot</code>).
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+<img align="right" width="330" src="docs/screenshots/menubar-popover.png" alt="Recurring v3 Menu-Bar Popover" />
+
+- <img src="docs/icons/tool-ledger.svg" width="26" height="26" align="absmiddle" /> &nbsp;**`01 · Ledger & Insights`** — Models fixed subscriptions, metered usage bills, annual renewals, and upfront prepaid terms (`term_start → term_end` amortized across active days). Includes a 30-day cancel-by radar, overlap consolidation groups, settled-vs-scheduled monthly cash-flow bars, a 20-week daily charge heatmap, card/account attribution, post-cancel charge watch, and refund claim tracking.
+
+- <img src="docs/icons/tool-vault.svg" width="26" height="26" align="absmiddle" /> &nbsp;**`02 · Vault · API Keys`** — Sentinel-compatible envelope-encrypted keyring (`Argon2id` + `AES-256-GCM` with AAD binding) supporting canonical **`Admin key`** & **`Org key`** tiers, live HTTPS endpoint health sweeps, atomic key rotation, `~/Projects` `.env` provenance + git-leak scanning, and 1-command Sentinel import.
+
+- <img src="docs/icons/tool-sync.svg" width="26" height="26" align="absmiddle" /> &nbsp;**`03 · Invoice Sync (syncd)`** — Persistent LaunchAgent combining `TLS IMAP IDLE` push sockets, 20-second Gmail `historyId` delta polling, Exchange/OWA auto-forward rules, and an hourly safety sweep. Collapses duplicate merchant receipts, Apple/Play bills, and bank card alerts into clean ledger entries.
+
+- <img src="docs/icons/tool-reimburse.svg" width="26" height="26" align="absmiddle" /> &nbsp;**`04 · Reimburse (wm-cloud)`** — Deterministic receipt packet compiler across any `[since .. until]` window. Rejects unpaid `"Amount due"` invoices, blocks double-submissions against prior sent batches, pairs 1:1 IT approvals, runs a 5-point byte/page PDF verify gate, and writes `<slug>.zip` + `approval-notice.txt` locally (never auto-sends).
+
+- <img src="docs/icons/tool-cli.svg" width="26" height="26" align="absmiddle" /> &nbsp;**`$ recurring` Headless CLI & Snapshot Engine** — `flock`-synchronized terminal mutations reflected in the live SwiftUI app in `<80ms` via kernel `DispatchSource` VNODE watch, plus headless `@2x` Retina PNG snapshot generation (`--snapshot`).
+
+<br clear="right" />
 
 ---
 
