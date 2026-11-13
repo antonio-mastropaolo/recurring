@@ -1,0 +1,57 @@
+name: Recurring
+options:
+  bundleIdPrefix: com.amastro
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+targets:
+  Recurring:
+    type: application
+    platform: macOS
+    sources:
+      - RecurringApp/Sources
+      - RecurringApp/Assets.xcassets
+      - path: RecurringApp/Fonts
+        type: folder
+    info:
+      path: RecurringApp/Info.plist
+      properties:
+        LSUIElement: true
+        NSPrincipalClass: NSApplication
+        CFBundleName: Recurring v3
+        CFBundleDisplayName: Recurring v3
+        CFBundleShortVersionString: "3.0"
+        CFBundleVersion: "3"
+        ATSApplicationFontsPath: Fonts
+        LSMinimumSystemVersion: "14.0"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.amastro.Recurring.v3
+        INFOPLIST_FILE: RecurringApp/Info.plist
+        PRODUCT_NAME: Recurring v3
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_HARDENED_RUNTIME: YES
+      configs:
+        Release:
+          # Personal app on an Apple-silicon Mac: build only the native slice, strip
+          # symbols from the shipped binary (the dSYM keeps them), drop dead code.
+          ONLY_ACTIVE_ARCH: YES
+          DEPLOYMENT_POSTPROCESSING: YES
+          STRIP_INSTALLED_PRODUCT: YES
+          STRIP_STYLE: all
+          DEAD_CODE_STRIPPING: YES
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+          SWIFT_COMPILATION_MODE: wholemodule
+schemes:
+  Recurring:
+    build:
+      targets:
+        Recurring: all
+    archive:
+      config: Release

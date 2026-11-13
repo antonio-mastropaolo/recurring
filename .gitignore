@@ -1,0 +1,7 @@
+build/
+*.xcodeproj/
+.DS_Store
+__pycache__/
+.pytest_cache/
+# Personal data never lives in the repo; it's at ~/.recurring/subscriptions.json
+subscriptions.json

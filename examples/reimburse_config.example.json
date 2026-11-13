@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "bundle_slug": "cloud-reimbursements",
+  "organization": "Acme Research University",
+  "traveler": {
+    "name": "Alex Rivera",
+    "employee_id": "100200300",
+    "position": "Assistant Professor — Computer Science",
+    "funding_worktag": "GR004200 — CS Individual Research Start-Up",
+    "fund_number": "420100"
+  },
+  "approver": {
+    "name": "Department Finance Office",
+    "email": "finance-approvals@example.edu"
+  },
+  "approvals_dir": "~/.recurring/reimbursements/approvals",
+  "portal_dir": "~/.recurring/reimbursements/portal",
+  "store_dir": "~/.recurring/reimbursements/store",
+  "batches_dir": "~/.recurring/reimbursements/batches",
+  "external_batches_dirs": [],
+  "external_submissions_json": "",
+  "cached_sources_dirs": [],
+  "approval_aliases": {
+    "xai": "approval-xai-supergrok"
+  },
+  "it_approvals": {
+    "anthropic": {
+      "status": "approved",
+      "ticket": "290101",
+      "approved_on": "2026-01-15"
+    },
+    "openai": {
+      "status": "approved",
+      "ticket": "256102",
+      "approved_on": "2026-01-10"
+    },
+    "openrouter": {
+      "status": "approved",
+      "ticket": "427103",
+      "approved_on": "2026-03-01"
+    },
+    "supabase": {
+      "status": "approved",
+      "ticket": "666104",
+      "approved_on": "2026-10-21"
+    },
+    "github": {
+      "status": "pending",
+      "ticket": "",
+      "note": "IT review ticket in progress"
+    }
+  },
+  "excluded_providers": [
+    "apple",
+    "decodo",
+    "donutproxies",
+    "flamingohub",
+    "nopecha"
+  ]
+}

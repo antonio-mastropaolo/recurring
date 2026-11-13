@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "mail_mcp_env_path": "~/.mail-mcp/.env",
+  "mailboxes": [
+    {
+      "key": "gmail:alex@example.com",
+      "email": "alex@example.com",
+      "provider": "gmail"
+    },
+    {
+      "key": "gmail:ops@acme.dev",
+      "email": "ops@acme.dev",
+      "provider": "gmail"
+    },
+    {
+      "key": "icloud:alex@icloud.com",
+      "email": "alex@icloud.com",
+      "provider": "icloud"
+    },
+    {
+      "key": "outlook:alex@university.edu",
+      "email": "alex@university.edu",
+      "provider": "owa",
+      "forward_via": "alex@example.com"
+    }
+  ],
+  "extra_gmail_from": [
+    "alex@university.edu"
+  ],
+  "auto_forward_senders": [
+    "alex@university.edu"
+  ],
+  "custom_rules": {
+    "claude-ops": [
+      {
+        "rx": "anthropic|claude",
+        "mbox": "ops@acme.dev",
+        "amounts": [200.0]
+      }
+    ],
+    "claude-personal": [
+      {
+        "rx": "anthropic|claude",
+        "mbox": "alex@example.com",
+        "amounts": [200.0]
+      }
+    ]
+  }
+}

@@ -1,0 +1,726 @@
+{
+ "today": "2026-10-08",
+ "services": [
+  {
+   "id": "m31",
+   "name": "Day-31 monthly",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 150.0,
+   "next_charge": "2026-10-31",
+   "monthly": 150.0,
+   "charges": 0
+  },
+  {
+   "id": "m29",
+   "name": "Day-29 monthly",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 9.0,
+   "next_charge": "2026-10-29",
+   "monthly": 9.0,
+   "charges": 0
+  },
+  {
+   "id": "bi",
+   "name": "Every two weeks",
+   "status": "active",
+   "cadence": "biweekly",
+   "amount": 15.0,
+   "next_charge": "2026-10-12",
+   "monthly": 32.61,
+   "charges": 0
+  },
+  {
+   "id": "yr-anchor",
+   "name": "Yearly from last charge",
+   "status": "active",
+   "cadence": "annual",
+   "amount": 90.0,
+   "next_charge": "2027-09-09",
+   "monthly": 7.5,
+   "charges": 0
+  },
+  {
+   "id": "yr-month",
+   "name": "Yearly from billing month",
+   "status": "active",
+   "cadence": "annual",
+   "amount": 65.0,
+   "next_charge": "2027-03-01",
+   "monthly": 5.42,
+   "charges": 0
+  },
+  {
+   "id": "semi",
+   "name": "Six-monthly",
+   "status": "active",
+   "cadence": "semiannual",
+   "amount": 9.99,
+   "next_charge": "2026-12-16",
+   "monthly": 1.67,
+   "charges": 0
+  },
+  {
+   "id": "term1y",
+   "name": "Prepaid year",
+   "status": "active",
+   "cadence": "term",
+   "amount": 1200.0,
+   "next_charge": null,
+   "monthly": 100.07,
+   "charges": 1
+  },
+  {
+   "id": "term2y",
+   "name": "two-year.example",
+   "status": "active",
+   "cadence": "term",
+   "amount": 160.0,
+   "next_charge": null,
+   "monthly": 6.66,
+   "charges": 0
+  },
+  {
+   "id": "usage",
+   "name": "Usage bill",
+   "status": "active",
+   "cadence": "usage",
+   "amount": 18.5,
+   "next_charge": "2026-10-08",
+   "monthly": 18.5,
+   "charges": 3
+  },
+  {
+   "id": "lastday",
+   "name": "Day from last charge",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 60.0,
+   "next_charge": "2026-11-01",
+   "monthly": 60.0,
+   "charges": 0
+  },
+  {
+   "id": "winding",
+   "name": "Cancelled, still running",
+   "status": "cancelled",
+   "cadence": "other",
+   "amount": 50.0,
+   "next_charge": null,
+   "monthly": null,
+   "charges": 1
+  },
+  {
+   "id": "unver",
+   "name": "Unverified phone",
+   "status": "unverified",
+   "cadence": "monthly",
+   "amount": 70.0,
+   "next_charge": null,
+   "monthly": null,
+   "charges": 0
+  },
+  {
+   "id": "closing",
+   "name": "Closing gym",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 25.0,
+   "next_charge": "2026-10-09",
+   "monthly": 25.0,
+   "charges": 0
+  },
+  {
+   "id": "typo-cadence",
+   "name": "Typo cadence",
+   "status": "active",
+   "cadence": "other",
+   "amount": 100.0,
+   "next_charge": null,
+   "monthly": null,
+   "charges": 0
+  },
+  {
+   "id": "typo-status",
+   "name": "Typo status",
+   "status": "unverified",
+   "cadence": "monthly",
+   "amount": 120.0,
+   "next_charge": null,
+   "monthly": null,
+   "charges": 0
+  },
+  {
+   "id": "str-amount",
+   "name": "String amount",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": null,
+   "next_charge": "2026-10-14",
+   "monthly": null,
+   "charges": 0
+  },
+  {
+   "id": "bad-charge",
+   "name": "One bad charge",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 9.99,
+   "next_charge": "2026-10-22",
+   "monthly": 9.99,
+   "charges": 1
+  },
+  {
+   "id": "bad-day",
+   "name": "Bad billing day",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 5.0,
+   "next_charge": "2026-10-15",
+   "monthly": 5.0,
+   "charges": 0
+  },
+  {
+   "id": "(unnamed)",
+   "name": "(unnamed)",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 3.99,
+   "next_charge": "2026-11-02",
+   "monthly": 3.99,
+   "charges": 0
+  },
+  {
+   "id": "dup",
+   "name": "Duplicate A",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 19.99,
+   "next_charge": "2026-10-24",
+   "monthly": 19.99,
+   "charges": 0
+  },
+  {
+   "id": "dup",
+   "name": "Duplicate B",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 1.0,
+   "next_charge": "2026-10-25",
+   "monthly": 1.0,
+   "charges": 0
+  },
+  {
+   "id": "pipe",
+   "name": "Pipe category",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 8.0,
+   "next_charge": "2026-11-01",
+   "monthly": 8.0,
+   "charges": 1
+  },
+  {
+   "id": "bad-date",
+   "name": "Bad term date",
+   "status": "active",
+   "cadence": "term",
+   "amount": 50.0,
+   "next_charge": null,
+   "monthly": null,
+   "charges": 0
+  },
+  {
+   "id": "nan-ish",
+   "name": "Boolean amount",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": null,
+   "next_charge": "2026-11-03",
+   "monthly": null,
+   "charges": 0
+  },
+  {
+   "id": "neg",
+   "name": "Negative amount",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": null,
+   "next_charge": "2026-11-05",
+   "monthly": null,
+   "charges": 0
+  },
+  {
+   "id": "huge",
+   "name": "Huge amount",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": null,
+   "next_charge": "2026-11-06",
+   "monthly": null,
+   "charges": 1
+  },
+  {
+   "id": "dupkey",
+   "name": "First name wins",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 2.5,
+   "next_charge": "2026-11-07",
+   "monthly": 2.5,
+   "charges": 0
+  },
+  {
+   "id": "late",
+   "name": "Charged after cancel",
+   "status": "cancelled",
+   "cadence": "monthly",
+   "amount": 20.0,
+   "next_charge": null,
+   "monthly": null,
+   "charges": 2
+  },
+  {
+   "id": "watched",
+   "name": "Watch me",
+   "status": "cancelled",
+   "cadence": "monthly",
+   "amount": 30.0,
+   "next_charge": null,
+   "monthly": null,
+   "charges": 1
+  },
+  {
+   "id": "gone",
+   "name": "Gone quiet",
+   "status": "cancelled",
+   "cadence": "monthly",
+   "amount": 12.0,
+   "next_charge": null,
+   "monthly": null,
+   "charges": 1
+  },
+  {
+   "id": "old-cancel",
+   "name": "Long gone",
+   "status": "cancelled",
+   "cadence": "monthly",
+   "amount": 5.0,
+   "next_charge": null,
+   "monthly": null,
+   "charges": 0
+  },
+  {
+   "id": "claims",
+   "name": "Refund claims",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 40.0,
+   "next_charge": "2026-10-12",
+   "monthly": 40.0,
+   "charges": 0
+  },
+  {
+   "id": "ai-1",
+   "name": "Chat Max",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 100.0,
+   "next_charge": "2026-11-03",
+   "monthly": 100.0,
+   "charges": 0
+  },
+  {
+   "id": "ai-2",
+   "name": "Other Chat Pro",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 20.0,
+   "next_charge": "2026-11-04",
+   "monthly": 20.0,
+   "charges": 0
+  },
+  {
+   "id": "pipe-2",
+   "name": "Pipe category (2nd account)",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 8.0,
+   "next_charge": "2026-11-02",
+   "monthly": 8.0,
+   "charges": 0
+  },
+  {
+   "id": "extra",
+   "name": "Unknown fields",
+   "status": "active",
+   "cadence": "monthly",
+   "amount": 4.99,
+   "next_charge": "2026-10-24",
+   "monthly": 4.99,
+   "charges": 0
+  }
+ ],
+ "monthly_total": 639.88,
+ "events_7d": [
+  [
+   "2026-10-08",
+   "charge",
+   "usage"
+  ],
+  [
+   "2026-10-09",
+   "charge",
+   "closing"
+  ],
+  [
+   "2026-10-12",
+   "charge",
+   "bi"
+  ],
+  [
+   "2026-10-12",
+   "charge",
+   "claims"
+  ],
+  [
+   "2026-10-14",
+   "charge",
+   "str-amount"
+  ],
+  [
+   "2026-10-15",
+   "charge",
+   "bad-day"
+  ]
+ ],
+ "cash_flow": {
+  "2026-08": {
+   "charged": 9.99,
+   "scheduled": 0.0
+  },
+  "2026-09": {
+   "charged": 1407.5,
+   "scheduled": 0.0
+  },
+  "2026-10": {
+   "charged": 33.5,
+   "scheduled": 294.97
+  },
+  "2026-11": {
+   "charged": 0.0,
+   "scheduled": 515.96
+  },
+  "2026-12": {
+   "charged": 0.0,
+   "scheduled": 525.95
+  },
+  "2027-01": {
+   "charged": 0.0,
+   "scheduled": 515.96
+  },
+  "2027-02": {
+   "charged": 0.0,
+   "scheduled": 515.96
+  },
+  "2027-03": {
+   "charged": 0.0,
+   "scheduled": 595.96
+  },
+  "2027-04": {
+   "charged": 0.0,
+   "scheduled": 515.96
+  },
+  "2027-05": {
+   "charged": 0.0,
+   "scheduled": 515.96
+  },
+  "2027-06": {
+   "charged": 0.0,
+   "scheduled": 525.95
+  },
+  "2027-07": {
+   "charged": 0.0,
+   "scheduled": 515.96
+  },
+  "2027-08": {
+   "charged": 0.0,
+   "scheduled": 530.96
+  },
+  "2027-09": {
+   "charged": 0.0,
+   "scheduled": 605.96
+  }
+ },
+ "issues": [
+  "typo-cadence: cadence is not one of biweekly/monthly/quarterly/semiannual/annual/term/usage/topup/other",
+  "typo-status: status is not active/cancelled/unverified \u2014 treated as unverified",
+  "str-amount: amount is not a finite number",
+  "bad-charge: charges[1] needs a yyyy-MM-dd date and a numeric amount \u2014 ignored",
+  "bad-charge: charges[2] needs a yyyy-MM-dd date and a numeric amount \u2014 ignored",
+  "bad-day: billing_day must be 1\u201331",
+  "service #19: name is missing",
+  "service #22: is not a JSON object \u2014 ignored",
+  "bad-date: term_start is not a yyyy-MM-dd date",
+  "nan-ish: amount is not a finite number",
+  "neg: amount is negative \u2014 record refunds as negative charges instead",
+  "huge: amount is out of range",
+  "huge: charges[0] needs a yyyy-MM-dd date and a numeric amount \u2014 ignored",
+  "claims: refunds[3] needs a positive amount and status open/requested/won/lost \u2014 ignored",
+  "claims: refunds[4] needs a positive amount and status open/requested/won/lost \u2014 ignored",
+  "dup: id is used more than once"
+ ],
+ "renewals_30d": [
+  [
+   "2026-10-08",
+   "usage",
+   0,
+   null
+  ],
+  [
+   "2026-10-09",
+   "closing",
+   1,
+   "2026-10-08"
+  ],
+  [
+   "2026-10-12",
+   "bi",
+   4,
+   "2026-10-11"
+  ],
+  [
+   "2026-10-12",
+   "claims",
+   4,
+   "2026-10-11"
+  ],
+  [
+   "2026-10-14",
+   "str-amount",
+   6,
+   "2026-10-13"
+  ],
+  [
+   "2026-10-15",
+   "bad-day",
+   7,
+   "2026-10-14"
+  ],
+  [
+   "2026-10-22",
+   "bad-charge",
+   14,
+   "2026-10-21"
+  ],
+  [
+   "2026-10-24",
+   "dup",
+   16,
+   "2026-10-23"
+  ],
+  [
+   "2026-10-24",
+   "extra",
+   16,
+   "2026-10-23"
+  ],
+  [
+   "2026-10-25",
+   "dup",
+   17,
+   "2026-10-24"
+  ],
+  [
+   "2026-10-26",
+   "bi",
+   18,
+   "2026-10-25"
+  ],
+  [
+   "2026-10-29",
+   "m29",
+   21,
+   "2026-10-28"
+  ],
+  [
+   "2026-10-31",
+   "m31",
+   23,
+   "2026-10-30"
+  ],
+  [
+   "2026-11-01",
+   "lastday",
+   24,
+   "2026-10-31"
+  ],
+  [
+   "2026-11-01",
+   "pipe",
+   24,
+   "2026-10-31"
+  ],
+  [
+   "2026-11-02",
+   "(unnamed)",
+   25,
+   "2026-11-01"
+  ],
+  [
+   "2026-11-02",
+   "pipe-2",
+   25,
+   "2026-11-01"
+  ],
+  [
+   "2026-11-03",
+   "nan-ish",
+   26,
+   "2026-11-02"
+  ],
+  [
+   "2026-11-03",
+   "ai-1",
+   26,
+   "2026-11-02"
+  ],
+  [
+   "2026-11-04",
+   "ai-2",
+   27,
+   "2026-11-03"
+  ],
+  [
+   "2026-11-05",
+   "neg",
+   28,
+   "2026-11-04"
+  ],
+  [
+   "2026-11-06",
+   "huge",
+   29,
+   "2026-11-05"
+  ],
+  [
+   "2026-11-07",
+   "dupkey",
+   30,
+   "2026-11-06"
+  ]
+ ],
+ "watch": [
+  [
+   "late",
+   "charged_after_cancel",
+   "2026-10-02",
+   20.0
+  ],
+  [
+   "watched",
+   "watch",
+   "2026-10-20",
+   0.0
+  ],
+  [
+   "gone",
+   "clear",
+   "2026-10-01",
+   0.0
+  ]
+ ],
+ "savings_30d": {
+  "monthly": 62.0,
+  "kept": 12.0,
+  "closing": 25.0,
+  "items": [
+   [
+    "watched",
+    30.0,
+    0.0
+   ],
+   [
+    "late",
+    20.0,
+    0.0
+   ],
+   [
+    "gone",
+    12.0,
+    12.0
+   ]
+  ]
+ },
+ "cuts_by_month": [
+  [
+   "2026-05",
+   5.0
+  ],
+  [
+   "2026-06",
+   0.0
+  ],
+  [
+   "2026-07",
+   0.0
+  ],
+  [
+   "2026-08",
+   0.0
+  ],
+  [
+   "2026-09",
+   32.0
+  ],
+  [
+   "2026-10",
+   30.0
+  ]
+ ],
+ "cut_groups": [
+  [
+   "AI chat",
+   false,
+   [
+    "ai-1",
+    "ai-2"
+   ],
+   120.0,
+   20.0,
+   100.0
+  ],
+  [
+   "Pipe category",
+   true,
+   [
+    "pipe",
+    "pipe-2"
+   ],
+   16.0,
+   8.0,
+   8.0
+  ]
+ ],
+ "refunds": {
+  "pending": 82.5,
+  "claims": [
+   [
+    "claims",
+    75.0,
+    "requested"
+   ],
+   [
+    "claims",
+    7.5,
+    "open"
+   ],
+   [
+    "claims",
+    10.0,
+    "won"
+   ]
+  ]
+ }
+}

@@ -1,0 +1,19 @@
+{
+  "as_of": "2026-10-01",
+  "currency": "USD",
+  "services": [
+    {"id": "spotify", "name": "Spotify", "category": "Consumer & personal", "amount": 12.99,
+     "amount_kind": "fixed", "cadence": "monthly", "billing_day": 14, "account": "me@example.com", "card": "1234",
+     "charges": [{"date": "2026-09-14", "amount": 12.99}], "last_charged": "2026-09-14",
+     "manage_url": "https://www.spotify.com/account", "status": "active"},
+    {"id": "fly-io", "name": "Fly.io", "category": "Infra & dev tools", "amount": 20.49, "amount_kind": "usage",
+     "cadence": "usage", "billing_day": 1, "charges": [{"date": "2026-10-01", "amount": 20.49}],
+     "last_charged": "2026-10-01", "status": "active"},
+    {"id": "coding-plan", "name": "Coding plan (1 year prepaid)", "category": "AI & LLM", "amount": 360.0,
+     "amount_kind": "fixed", "cadence": "term", "term_start": "2026-09-21", "term_end": "2027-09-21",
+     "charges": [{"date": "2026-09-21", "amount": 360.0}], "last_charged": "2026-09-21", "status": "active"},
+    {"id": "old-phone", "name": "Old phone plan", "category": "Consumer & personal", "amount": 80.0,
+     "cadence": "monthly", "billing_day": 1, "status": "unverified", "check": "no charge since Jun 1"}
+  ],
+  "version": 2
+}
