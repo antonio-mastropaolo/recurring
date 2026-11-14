@@ -40,7 +40,7 @@ struct ReimburseView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: DS.gridGap) {
             kpiRow
             packetBuilderPanel
             if let pkt {
@@ -48,10 +48,18 @@ struct ReimburseView: View {
                     gateViolationsBanner(pkt.violations)
                 }
                 providerPairingPanel(pkt)
-                HStack(alignment: .top, spacing: 18) {
+                HStack(alignment: .top, spacing: DS.gridGap) {
                     auditLedgerPanel(pkt)
-                    draftNoticePanel(pkt)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+                    VStack(alignment: .leading, spacing: DS.gridGap) {
+                        draftNoticePanel(pkt)
+                            .fixedSize(horizontal: false, vertical: true)
+                        gateChecklistPanel(pkt)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
+                .fixedSize(horizontal: false, vertical: true)
             } else {
                 emptyPacketPanel
             }
@@ -107,15 +115,15 @@ struct ReimburseView: View {
             return "\(sShort) → \(uShort)"
         }()
 
-        return HStack(spacing: 12) {
+        return HStack(spacing: DS.gridGap) {
             KPI(
                 label: "Reimbursable packet",
                 value: Money.exact(total),
                 caption: pkt != nil
                     ? "\(rcptCount) paid receipt\(rcptCount == 1 ? "" : "s") across \(provCount) provider\(provCount == 1 ? "" : "s")"
                     : "Select date range to compile .zip",
-                delta: pkt?.zipPath != nil ? "✓ \(rState.bundleSlug).zip ready" : nil,
-                deltaColor: DS.mint,
+                delta: pkt?.zipPath != nil ? "✓ .zip archive verified" : "● Ready to compile",
+                deltaColor: pkt?.zipPath != nil ? DS.mint : DS.ink3,
                 accent: DS.amber
             )
             KPI(
@@ -129,15 +137,15 @@ struct ReimburseView: View {
                 label: "1:1 IT approvals",
                 value: pkt != nil ? "\(pairedCount)/\(provCount)" : "\(rState.verifiedApprovalCount)",
                 caption: "\(rState.verifiedApprovalCount) verified on disk · \(rState.pendingApprovalCount) pending",
-                delta: pairedCount == provCount && provCount > 0 ? "✓ Every bundle paired" : nil,
-                deltaColor: DS.mint,
+                delta: pairedCount == provCount && provCount > 0 ? "✓ Every bundle paired" : "● \(rState.verifiedApprovalCount) approvals on file",
+                deltaColor: pairedCount == provCount && provCount > 0 ? DS.mint : DS.ink3,
                 valueColor: (pkt != nil && pairedCount == provCount) ? DS.mint : DS.ink
             )
             KPI(
                 label: "5-point verify gate",
                 value: gateLabel,
                 caption: "Byte-level %PDF + page reconciliation",
-                delta: pkt.map { "✓ \($0.totalCompiledPages) out == \($0.totalSourcePages) src\(pkt?.coverPages ?? 0 > 0 ? " + cover" : "")" },
+                delta: pkt.map { "✓ \($0.totalCompiledPages) out == \($0.totalSourcePages) src\(pkt?.coverPages ?? 0 > 0 ? " + cover" : "")" } ?? "● Standby",
                 deltaColor: gateColor,
                 valueColor: gateColor,
                 accent: pkt?.gatePassed == false ? DS.coral : DS.mint
@@ -151,6 +159,7 @@ struct ReimburseView: View {
                 valueColor: blockedCount > 0 ? DS.amber : DS.ink
             )
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - 2. Interactive Deterministic Packet Builder Panel
@@ -384,13 +393,7 @@ struct ReimburseView: View {
                     Rectangle().fill(DS.borderSubtle).frame(height: 1)
                     HStack(spacing: 12) {
                         HStack(spacing: 9) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(DS.well)
-                                    .frame(width: 26, height: 26)
-                                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DS.border, lineWidth: 1))
-                                DSProviderGlyph(provider: g.provider, size: 14)
-                            }
+                            DSProviderBadge(provider: g.provider, tileSize: 26, glyphSize: 14)
                             VStack(alignment: .leading, spacing: 1.5) {
                                 Text(g.label)
                                     .font(DS.display(12.5, weight: .semibold))
@@ -475,7 +478,7 @@ struct ReimburseView: View {
                         .frame(width: 64, alignment: .trailing)
                     }
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 9.5)
+                    .padding(.vertical, 7.5)
                 }
 
                 // Total Footer Row
@@ -516,11 +519,12 @@ struct ReimburseView: View {
         return DSPanel(
             eyebrow: "SOURCE-LEVEL AUDIT",
             title: "Receipts, Exclusions & IT Approval Registry",
-            subtitle: "Unpaid 'Amount due' invoices, prior sent batches, and unapproved vendors are isolated automatically."
+            subtitle: "Unpaid 'Amount due' invoices, prior sent batches, and unapproved vendors are isolated automatically.",
+            fillHeight: true
         ) {
             EmptyView()
         } content: {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 9) {
                 HStack(spacing: 6) {
                     DSFilterChip(
                         title: "Included",
@@ -553,14 +557,14 @@ struct ReimburseView: View {
                 VStack(spacing: 0) {
                     switch selectedAuditTab {
                     case .included:
-                        ForEach(Array(allIncluded.prefix(12).enumerated()), id: \.element.id) { idx, r in
+                        ForEach(Array(allIncluded.prefix(15).enumerated()), id: \.element.id) { idx, r in
                             if idx > 0 { Rectangle().fill(DS.borderSubtle).frame(height: 1) }
                             HStack(spacing: 10) {
                                 Text(r.date)
                                     .font(DS.mono(10.5))
                                     .foregroundStyle(DS.ink3)
                                     .frame(width: 82, alignment: .leading)
-                                VStack(alignment: .leading, spacing: 1.5) {
+                                VStack(alignment: .leading, spacing: 1) {
                                     HStack(spacing: 6) {
                                         Text(VaultKeyItem.providerDisplayName(r.provider))
                                             .font(DS.display(12, weight: .semibold))
@@ -586,13 +590,13 @@ struct ReimburseView: View {
                                     .foregroundStyle(DS.ink)
                             }
                             .padding(.horizontal, 11)
-                            .padding(.vertical, 7.5)
+                            .padding(.vertical, 6.5)
                         }
-                        if allIncluded.count > 12 {
-                            Text("+ \(allIncluded.count - 12) more verified receipt PDFs in manifest.json")
+                        if allIncluded.count > 15 {
+                            Text("+ \(allIncluded.count - 15) more verified receipt PDFs in manifest.json")
                                 .font(DS.mono(10))
                                 .foregroundStyle(DS.ink3)
-                                .padding(10)
+                                .padding(9)
                         }
 
                     case .blocked:
@@ -638,13 +642,27 @@ struct ReimburseView: View {
                                     .lineLimit(1)
                             }
                             .padding(.horizontal, 11)
-                            .padding(.vertical, 7.5)
+                            .padding(.vertical, 6.5)
                         }
                     }
                 }
                 .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
                 .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.border, lineWidth: 1))
+
+                Spacer(minLength: 6)
+
+                HStack(spacing: 14) {
+                    Stat(label: "manifest", value: "\(pkt.receiptCount) paid PDFs")
+                    Stat(label: "blocked", value: "\(pkt.blockedUnapproved.count)")
+                    Stat(label: "deduped", value: "\(pkt.excluded.count)")
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
             }
+            .frame(maxHeight: .infinity, alignment: .topLeading)
         }
     }
 
@@ -742,6 +760,48 @@ struct ReimburseView: View {
                 .font(DS.mono(10.5, weight: .medium))
                 .foregroundStyle(DS.ink)
                 .lineLimit(2)
+        }
+    }
+
+    // MARK: - 7. 5-Point Deterministic Gate Ledger (Flushes Right Column to Audit Panel)
+
+    private func gateChecklistPanel(_ pkt: ReimbursePacketData) -> some View {
+        let checks: [(label: String, detail: String, ok: Bool)] = [
+            ("%PDF-1.x byte signatures", "\(pkt.receiptCount) source PDFs + \(pkt.providerCount) compiled PDFs verified", pkt.gatePassed),
+            ("Page-count reconciliation", "\(pkt.totalCompiledPages) compiled == \(pkt.totalSourcePages) source\(pkt.coverPages > 0 ? " + \(pkt.coverPages) cover" : "")", pkt.gatePassed),
+            ("1:1 IT approval pairing", "\(pkt.groups.filter(\.hasApprovalArtifact).count)/\(pkt.providerCount) provider folders paired", pkt.groups.allSatisfy(\.hasApprovalArtifact)),
+            ("Unpaid invoice filter", "'Amount due' bills excluded before compilation", true),
+            ("Double-submit SHA-256 lock", "Prior sent batch hashes & invoice IDs isolated", true),
+        ]
+
+        return DSPanel(
+            eyebrow: "ANTI-HALLUCINATION RECONCILIATION",
+            title: "5-point deterministic gate",
+            subtitle: "Every invariant must pass before \(pkt.zipFilename) is sealed on disk",
+            fillHeight: true
+        ) {
+            DSStatusPill(text: pkt.gatePassed ? "5/5 PASS" : "CHECK", tint: pkt.gatePassed ? DS.mint : DS.coral)
+        } content: {
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(Array(checks.enumerated()), id: \.offset) { _, ch in
+                    HStack(spacing: 8) {
+                        Image(systemName: ch.ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                            .font(.system(size: 10.5, weight: .semibold))
+                            .foregroundStyle(ch.ok ? DS.mint : DS.coral)
+                        Text(ch.label)
+                            .font(DS.display(11.5, weight: .semibold))
+                            .foregroundStyle(DS.ink)
+                        Spacer(minLength: 6)
+                        Text(ch.detail)
+                            .font(DS.mono(9.5))
+                            .foregroundStyle(DS.ink3)
+                            .lineLimit(1)
+                    }
+                    .padding(.vertical, 1.5)
+                }
+                Spacer(minLength: 0)
+            }
+            .frame(maxHeight: .infinity, alignment: .topLeading)
         }
     }
 

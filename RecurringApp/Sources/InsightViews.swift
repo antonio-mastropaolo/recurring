@@ -15,6 +15,8 @@ struct RenewalsPanel: View {
     var body: some View {
         let selRenewals: [Renewal] = selectedDayISO.flatMap { radar.byDayISO[$0] } ?? []
         let selDate: Date? = selectedDayISO.flatMap(Schedule.parseDay)
+        let rowCount = max(radar.bigRenewals.count, 5)
+        let targetChartHeight = max(210, min(330, CGFloat(rowCount) * 36 - 16))
 
         DSPanel(
             eyebrow: "RENEWAL RADAR · 30D",
@@ -27,8 +29,8 @@ struct RenewalsPanel: View {
                 DSStatusPill(text: "30D · \(radar.count30d) · \(Money.whole(radar.total30d))", tint: DS.amber)
             }
         } content: {
-            HStack(alignment: .top, spacing: 22) {
-                VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 14) {
+                VStack(alignment: .leading, spacing: 8) {
                     Chart {
                         ForEach(radar.buckets) { b in
                             BarMark(x: .value("Day", b.day, unit: .day), y: .value("USD", b.amount))
@@ -53,11 +55,14 @@ struct RenewalsPanel: View {
                     .chartForegroundStyleScale(domain: radar.categories, range: radar.categories.map(DS.categoryColor))
                     .chartLegend(.hidden)
                     .chartXAxis {
-                        AxisMarks(values: .stride(by: .day, count: 5)) { _ in
+                        let labelCutoff = Schedule.calendar.date(byAdding: .day, value: -2, to: radar.endDay) ?? radar.endDay
+                        AxisMarks(values: .stride(by: .day, count: 5)) { value in
                             AxisGridLine().foregroundStyle(DS.borderSubtle)
-                            AxisValueLabel(format: .dateTime.month(.abbreviated).day())
-                                .font(DS.mono(9.5))
-                                .foregroundStyle(DS.ink3)
+                            if let d = value.as(Date.self), d <= labelCutoff {
+                                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                                    .font(DS.mono(9.5))
+                                    .foregroundStyle(DS.ink3)
+                            }
                         }
                     }
                     .chartYAxis {
@@ -96,26 +101,29 @@ struct RenewalsPanel: View {
                                 }
                         }
                     }
-                    .frame(height: 360)
+                    .padding(.trailing, 10)
+                    .frame(height: targetChartHeight)
+
+                    Spacer(minLength: 0)
 
                     HStack(spacing: 14) {
                         if let selDate, !selRenewals.isEmpty {
                             let daySum = selRenewals.compactMap(\.amount).reduce(0, +)
                             Text("\(DayText.short(selDate)) · \(Money.exact(daySum))")
-                                .font(DS.mono(11.5, weight: .semibold))
+                                .font(DS.mono(11, weight: .semibold))
                                 .foregroundStyle(DS.amber)
                             Text(selRenewals.map { r in
                                 "\(displayNames[r.service.id] ?? r.service.name) \(Money.row(r.service))"
                             }.joined(separator: " · "))
-                                .font(DS.display(11.5))
+                                .font(DS.display(11))
                                 .foregroundStyle(DS.ink2)
                                 .lineLimit(1)
                         } else if let selDate {
                             Text(DayText.short(selDate))
-                                .font(DS.mono(11.5, weight: .semibold))
+                                .font(DS.mono(11, weight: .semibold))
                                 .foregroundStyle(DS.ink2)
                             Text("No scheduled renewals")
-                                .font(DS.display(11.5))
+                                .font(DS.display(11))
                                 .foregroundStyle(DS.ink3)
                         } else {
                             Stat(label: "7d cash", value: Money.exact(radar.total7d))
@@ -127,33 +135,49 @@ struct RenewalsPanel: View {
                         }
                         Spacer(minLength: 4)
                         Text("hover day")
-                            .font(DS.mono(10))
+                            .font(DS.mono(9.5))
                             .foregroundStyle(DS.ink3)
                     }
-                    .frame(height: 18)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.55)))
+                    .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+                Rectangle()
+                    .fill(DS.borderSubtle)
+                    .frame(width: 1)
 
                 VStack(alignment: .leading, spacing: 0) {
-                    DSEyebrow(text: "Cancel before renewal (\(Money.whole(Insights.bigRenewal))+)", color: DS.amber)
-                        .padding(.bottom, 8)
+                    HStack {
+                        DSEyebrow(text: "Cancel before renewal (\(Money.whole(Insights.bigRenewal))+)", color: DS.amber)
+                        Spacer()
+                        Text("\(radar.bigRenewals.count) queued")
+                            .font(DS.mono(9.5, weight: .semibold))
+                            .foregroundStyle(DS.ink3)
+                    }
+                    .padding(.bottom, 6)
                     if radar.bigRenewals.isEmpty {
                         Text("No \(Money.whole(Insights.bigRenewal))+ charges in the next 30 days.")
                             .font(DS.display(11.5))
                             .foregroundStyle(DS.ink3)
                     }
-                    ForEach(radar.bigRenewals, id: \.self) { r in
+                    ForEach(Array(radar.bigRenewals.enumerated()), id: \.element) { idx, r in
+                        if idx > 0 {
+                            Rectangle().fill(DS.borderSubtle).frame(height: 1)
+                        }
                         BigRenewalRow(
                             renewal: r,
                             displayName: displayNames[r.service.id] ?? r.service.name,
                             today: today,
                             onSelect: { onSelectService(r.service) }
                         )
-                        Rectangle().fill(DS.borderSubtle).frame(height: 1)
                     }
                 }
-                .frame(width: 416)
+                .frame(width: 406)
             }
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -215,7 +239,7 @@ private struct BigRenewalRow: View {
                 .help("Open billing page: \(r.service.manageHost ?? "")")
             }
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 4.5)
         .padding(.horizontal, 4)
         .background(RoundedRectangle(cornerRadius: 5).fill(hovering ? DS.rowHover : Color.clear))
         .onHover { hovering = $0 }
@@ -269,6 +293,7 @@ struct MoneyBackPanel: View {
     let clearedNames: String
     let displayNames: [String: String]
     let today: Date
+    var fillHeight: Bool = false
     var onSelectService: (Service) -> Void = { _ in }
 
     var body: some View {
@@ -276,10 +301,11 @@ struct MoneyBackPanel: View {
             eyebrow: "RECOVERY & GUARDRAILS",
             title: "Money back & cancellation watch",
             subtitle: "Active refund claims · post-cancel charges · cancellations inside their renewal window",
-            accentBar: (pendingTotal > 0 || !late.isEmpty) ? DS.coral : nil
+            accentBar: (pendingTotal > 0 || !late.isEmpty) ? DS.coral : nil,
+            fillHeight: fillHeight
         ) {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .firstTextBaseline, spacing: 18) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 14) {
                     BigFigure(value: Money.exact(pendingTotal), label: "to get back", color: pendingTotal > 0 ? DS.coral : DS.ink)
                     BigFigure(value: "\(late.count)", label: "charged after cancel", color: late.isEmpty ? DS.ink : DS.coral)
                     BigFigure(value: "\(watching.count)", label: "watching", color: watching.isEmpty ? DS.ink : DS.amber)
@@ -288,6 +314,10 @@ struct MoneyBackPanel: View {
                     }
                     Spacer()
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
 
                 if !claims.isEmpty {
                     GroupSection(title: "REFUNDS", icon: "arrow.uturn.backward.circle", tint: DS.coral) {
@@ -360,19 +390,33 @@ struct MoneyBackPanel: View {
                         }
                     }
                 }
-                if clearedCount > 0 {
-                    Label("\(clearedCount) recent cancellations cleared their renewal window with zero charges",
-                          systemImage: "checkmark.circle.fill")
-                        .font(DS.display(11))
-                        .foregroundStyle(DS.mint)
-                        .help(clearedNames)
-                }
                 if claims.isEmpty && late.isEmpty && watching.isEmpty && clearedCount == 0 {
                     Text("Nothing to chase, nothing to watch.")
                         .font(DS.display(12))
                         .foregroundStyle(DS.ink3)
                 }
+
+                Spacer(minLength: 6)
+
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.shield.fill")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(DS.mint)
+                    Text(clearedCount > 0
+                         ? "\(clearedCount) recent cancellations cleared their renewal window with zero charges"
+                         : "Post-cancel guardrail active across all ended plans")
+                        .font(DS.display(10.5))
+                        .foregroundStyle(DS.ink2)
+                        .lineLimit(1)
+                    Spacer()
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
+                .help(clearedNames)
             }
+            .frame(maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading)
         }
     }
 
@@ -454,6 +498,7 @@ struct SavingsPanel: View {
     let now: Double
     let closingCount: Int
     let cutsByMonth: [(month: String, monthly: Double)]
+    var fillHeight: Bool = false
 
     private struct Step: Identifiable {
         let id: Int
@@ -472,15 +517,21 @@ struct SavingsPanel: View {
             eyebrow: "RUN-RATE DELTA",
             title: "Savings from cancellations",
             subtitle: "Cancelled since \(DayText.short(savings.since)) — monthly burn removed and projected floor once closing plans end",
-            accentBar: DS.mint
+            accentBar: DS.mint,
+            fillHeight: fillHeight
         ) {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .firstTextBaseline, spacing: 18) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 14) {
                     BigFigure(value: "−\(Money.exact(savings.monthly))", label: "per month", color: DS.mint)
                     BigFigure(value: "−\(Money.whole(savings.yearly))", label: "per year", color: DS.mint)
                     BigFigure(value: Money.exact(savings.kept), label: "kept so far", color: DS.ink)
                     Spacer()
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
+
                 Chart(steps) { s in
                     BarMark(
                         xStart: .value("From", min(s.from, s.to)),
@@ -512,9 +563,11 @@ struct SavingsPanel: View {
                         AxisValueLabel().font(DS.display(10.5)).foregroundStyle(DS.ink2)
                     }
                 }
-                .frame(height: CGFloat(steps.count) * 24 + 24)
+                .frame(height: CGFloat(steps.count) * 21 + 20)
 
-                VStack(alignment: .leading, spacing: 6) {
+                Spacer(minLength: 4)
+
+                VStack(alignment: .leading, spacing: 5) {
                     DSEyebrow(text: "Monthly burn cut by month")
                     Chart(Array(cutsByMonth.enumerated()), id: \.offset) { _, m in
                         BarMark(
@@ -539,9 +592,10 @@ struct SavingsPanel: View {
                                 .foregroundStyle(DS.ink3)
                         }
                     }
-                    .frame(height: 88)
+                    .frame(height: 82)
                 }
             }
+            .frame(maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading)
         }
     }
 
@@ -587,13 +641,17 @@ struct CutPanel: View {
     let groups: [CutGroup]
     let rowMeta: [String: ServiceRowMeta]
     @ObservedObject var explorer: ExplorerState
+    var fillHeight: Bool = false
 
     var body: some View {
         let atLeast = groups.map(\.saveMin).reduce(0, +)
+        let maxSave = groups.map(\.saveMax).reduce(0, +)
+        let memberTotal = groups.map { $0.members.count }.reduce(0, +)
         DSPanel(
             eyebrow: "OVERLAP CONSOLIDATION",
             title: "Where to cut",
-            subtitle: "Duplicate accounts or overlapping plans · click any group to compare & trim in Ledger"
+            subtitle: "Duplicate accounts or overlapping plans · click any group to compare & trim in Ledger",
+            fillHeight: fillHeight
         ) {
             if explorer.overlapFilter != nil {
                 DSChipButton(title: "Clear filter", icon: "xmark") {
@@ -601,17 +659,21 @@ struct CutPanel: View {
                 }
             }
         } content: {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 10) {
                 if groups.isEmpty {
                     Text("No overlaps detected. Assign `recurring set ID group=\"AI assistants\"` to compare substitutes.")
                         .font(DS.display(11.5))
                         .foregroundStyle(DS.ink3)
                 } else {
-                    HStack(alignment: .firstTextBaseline, spacing: 18) {
+                    HStack(alignment: .firstTextBaseline, spacing: 14) {
                         BigFigure(value: "−\(Money.exact(atLeast))", label: "a month keeping one per group", color: DS.mint)
                         BigFigure(value: "−\(Money.whole(atLeast * 12))", label: "a year", color: DS.mint)
                         Spacer()
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                    .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
                 }
                 ForEach(groups, id: \.name) { g in
                     CutGroupRow(
@@ -622,7 +684,25 @@ struct CutPanel: View {
                         explorer.toggleOverlap(g, scroll: true)
                     }
                 }
+
+                Spacer(minLength: 6)
+
+                HStack(spacing: 12) {
+                    Stat(label: "overlapping plans", value: "\(memberTotal) → \(groups.count)")
+                    if maxSave > atLeast + 0.01 {
+                        Stat(label: "ceiling", value: "−\(Money.whole(maxSave))/mo")
+                    }
+                    Spacer()
+                    Text("click group to filter")
+                        .font(DS.mono(9.5))
+                        .foregroundStyle(DS.ink3)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
             }
+            .frame(maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading)
         }
     }
 }
@@ -638,10 +718,10 @@ private struct CutGroupRow: View {
         let g = group
         let costs = g.members.map { rowMeta[$0.id]?.monthlyEquiv ?? 0 }
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(g.name)
-                        .font(DS.display(13, weight: .semibold))
+                        .font(DS.display(12.5, weight: .semibold))
                         .foregroundStyle(selected ? DS.amber : DS.ink)
                     Text(g.auto ? "same service ×\(g.members.count)" : "\(g.members.count) plans")
                         .font(DS.mono(10))
@@ -663,7 +743,7 @@ private struct CutGroupRow: View {
                         }
                     }
                 }
-                .frame(height: 10)
+                .frame(height: 8)
                 Text(zip(g.members, costs).map {
                     let disp = rowMeta[$0.0.id]?.displayName ?? $0.0.name
                     return "\(disp) \(Money.whole($0.1))"
@@ -690,11 +770,11 @@ private struct CutGroupRow: View {
             .padding(9)
             .background(
                 RoundedRectangle(cornerRadius: DS.radiusWell)
-                    .fill(selected ? DS.elevated : (hovering ? DS.rowHover : Color.clear))
+                    .fill(selected ? DS.elevated : (hovering ? DS.rowHover : DS.well.opacity(0.35)))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: DS.radiusWell)
-                    .strokeBorder(selected ? DS.amber.opacity(0.6) : (hovering ? DS.border : Color.clear), lineWidth: 1)
+                    .strokeBorder(selected ? DS.amber.opacity(0.6) : (hovering ? DS.border : DS.borderSubtle), lineWidth: 1)
             )
             .contentShape(RoundedRectangle(cornerRadius: DS.radiusWell))
         }
@@ -709,6 +789,7 @@ private struct CutGroupRow: View {
 struct SpendShapePanel: View {
     let burn: Insights.BurnBreakdown
     @ObservedObject var explorer: ExplorerState
+    var fillHeight: Bool = false
 
     var body: some View {
         let cats = burn.byCategory
@@ -717,7 +798,8 @@ struct SpendShapePanel: View {
         DSPanel(
             eyebrow: "ALLOCATION & CADENCE",
             title: "Where the money goes",
-            subtitle: "Click any category to filter the Ledger · cadence split shows fixed vs committed vs usage"
+            subtitle: "Click any category to filter the Ledger · cadence split shows fixed vs committed vs usage",
+            fillHeight: fillHeight
         ) {
             if explorer.categoryFilter != nil {
                 DSChipButton(title: "All categories", icon: "xmark") {
@@ -725,8 +807,8 @@ struct SpendShapePanel: View {
                 }
             }
         } content: {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .center, spacing: 22) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .center, spacing: 16) {
                     ZStack {
                         Chart(cats) { c in
                             SectorMark(angle: .value("USD", c.monthly), innerRadius: .ratio(0.66), angularInset: 1.5)
@@ -734,17 +816,17 @@ struct SpendShapePanel: View {
                                 .foregroundStyle(DS.categoryColor(c.label))
                                 .opacity(explorer.categoryFilter == nil || explorer.categoryFilter == c.label ? 1 : 0.35)
                         }
-                        .frame(width: 178, height: 178)
+                        .frame(width: 168, height: 168)
                         VStack(spacing: 1) {
                             Text(Money.whole(total))
-                                .font(DS.display(20, weight: .bold))
+                                .font(DS.display(19, weight: .bold))
                                 .foregroundStyle(DS.ink)
                             Text("/month")
-                                .font(DS.mono(10))
+                                .font(DS.mono(9.5))
                                 .foregroundStyle(DS.ink3)
                         }
                     }
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 3.5) {
                         ForEach(cats) { c in
                             CategorySliceButton(
                                 slice: c,
@@ -753,7 +835,7 @@ struct SpendShapePanel: View {
                                 explorer.toggleCategory(c.label, scroll: true)
                             }
                         }
-                        Rectangle().fill(DS.borderSubtle).frame(height: 1).padding(.vertical, 4)
+                        Rectangle().fill(DS.borderSubtle).frame(height: 1).padding(.vertical, 3)
                         StatLine(
                             label: "Top 5 plans",
                             value: "\(Int((burn.top5Share * 100).rounded()))% of spend",
@@ -772,12 +854,18 @@ struct SpendShapePanel: View {
                     }
                 }
 
+                Spacer(minLength: 6)
+
                 // Cadence Structure Strip (Fixed Monthly vs Multi-month vs Prepaid vs Usage)
                 VStack(alignment: .leading, spacing: 6) {
                     DSEyebrow(text: "Commitment structure")
                     CadenceMixBar(burn: burn)
                 }
+                .padding(9)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
             }
+            .frame(maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading)
         }
     }
 
@@ -893,6 +981,7 @@ private struct StatLine: View {
 
 struct ChargeCalendarPanel: View {
     let heatmap: CalendarHeatmapData
+    var fillHeight: Bool = false
     var onSelectServiceID: (String) -> Void = { _ in }
 
     @State private var selectedDayISO: String?
@@ -910,7 +999,8 @@ struct ChargeCalendarPanel: View {
         DSPanel(
             eyebrow: "SETTLEMENT CADENCE",
             title: "Charge calendar",
-            subtitle: "Recorded charges over the last 20 weeks · hover or click any day to inspect receipts"
+            subtitle: "Recorded charges over the last 20 weeks · hover or click any day to inspect receipts",
+            fillHeight: fillHeight
         ) {
             if pinnedDayISO != nil {
                 DSChipButton(title: "Unpin day", icon: "xmark") {
@@ -918,21 +1008,21 @@ struct ChargeCalendarPanel: View {
                 }
             }
         } content: {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top, spacing: 5) {
-                    VStack(alignment: .trailing, spacing: 3.5) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 4.5) {
+                    VStack(alignment: .trailing, spacing: 3) {
                         ForEach(Self.weekdays, id: \.self) { d in
                             Text(["Mon", "Wed", "Fri"].contains(d) ? d : " ")
                                 .font(DS.mono(9))
                                 .foregroundStyle(DS.ink3)
-                                .frame(height: 19)
+                                .frame(height: 18)
                         }
                     }
                     .fixedSize(horizontal: true, vertical: false)
 
                     ForEach(Array(heatmap.weekLabels.enumerated()), id: \.offset) { i, w in
                         let shortWeek = w.components(separatedBy: "#").first ?? w
-                        VStack(alignment: .leading, spacing: 3.5) {
+                        VStack(alignment: .leading, spacing: 3) {
                             ForEach(Self.weekdays, id: \.self) { d in
                                 let cell = heatmap.byID[w + "|" + d]
                                 CalendarDaySquare(
@@ -957,65 +1047,72 @@ struct ChargeCalendarPanel: View {
                                 .font(DS.mono(8.5))
                                 .foregroundStyle(DS.ink3)
                                 .fixedSize()
-                                .frame(width: 19, alignment: .leading)
+                                .frame(width: 18, alignment: .leading)
                         }
                         .frame(maxWidth: .infinity)
                     }
                 }
 
-                if let activeDate {
-                    let sum = activeCharges.map(\.amount).reduce(0, +)
-                    HStack(spacing: 8) {
-                        Text(DayText.weekdayDate(activeDate))
-                            .font(DS.mono(10.5, weight: .semibold))
-                            .foregroundStyle(DS.amber)
-                        if activeCharges.isEmpty {
-                            Text("No charges settled")
-                                .font(DS.display(11))
-                                .foregroundStyle(DS.ink3)
-                        } else {
-                            Text(Money.exact(sum))
-                                .font(DS.mono(11, weight: .bold))
-                                .foregroundStyle(DS.ink)
-                            Text("·")
-                                .foregroundStyle(DS.ink3)
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 8) {
-                                    ForEach(activeCharges) { ch in
-                                        Button {
-                                            onSelectServiceID(ch.serviceID)
-                                        } label: {
-                                            HStack(spacing: 4) {
-                                                Circle().fill(DS.categoryColor(ch.category)).frame(width: 5.5, height: 5.5)
-                                                Text(ch.serviceName)
-                                                    .font(DS.display(11, weight: .medium))
-                                                    .foregroundStyle(DS.ink2)
-                                                Text(Money.exact(ch.amount))
-                                                    .font(DS.mono(10.5, weight: .semibold))
-                                                    .foregroundStyle(DS.ink)
+                Spacer(minLength: 4)
+
+                Group {
+                    if let activeDate {
+                        let sum = activeCharges.map(\.amount).reduce(0, +)
+                        HStack(spacing: 8) {
+                            Text(DayText.weekdayDate(activeDate))
+                                .font(DS.mono(10.5, weight: .semibold))
+                                .foregroundStyle(DS.amber)
+                            if activeCharges.isEmpty {
+                                Text("No charges settled")
+                                    .font(DS.display(11))
+                                    .foregroundStyle(DS.ink3)
+                            } else {
+                                Text(Money.exact(sum))
+                                    .font(DS.mono(11, weight: .bold))
+                                    .foregroundStyle(DS.ink)
+                                Text("·")
+                                    .foregroundStyle(DS.ink3)
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(activeCharges) { ch in
+                                            Button {
+                                                onSelectServiceID(ch.serviceID)
+                                            } label: {
+                                                HStack(spacing: 4) {
+                                                    Circle().fill(DS.categoryColor(ch.category)).frame(width: 5.5, height: 5.5)
+                                                    Text(ch.serviceName)
+                                                        .font(DS.display(11, weight: .medium))
+                                                        .foregroundStyle(DS.ink2)
+                                                    Text(Money.exact(ch.amount))
+                                                        .font(DS.mono(10.5, weight: .semibold))
+                                                        .foregroundStyle(DS.ink)
+                                                }
                                             }
+                                            .buttonStyle(.plain)
+                                            .focusEffectDisabled()
                                         }
-                                        .buttonStyle(.plain)
-                                        .focusEffectDisabled()
                                     }
                                 }
                             }
+                            Spacer(minLength: 0)
                         }
-                        Spacer(minLength: 0)
+                    } else {
+                        HStack(spacing: 14) {
+                            Stat(label: "settled", value: "\(heatmap.settledDays)d · \(Money.whole(heatmap.totalAmount))")
+                            if let peak = heatmap.peakLabel { Stat(label: "peak", value: peak) }
+                            if let busiest = heatmap.busiestWeekday { Stat(label: "busiest", value: busiest) }
+                            if let fh = heatmap.firstHalfPercent { Stat(label: "1st–15th", value: "\(fh)%") }
+                            Spacer(minLength: 0)
+                        }
+                        .help("\(heatmap.totalChargeCount) charges recorded in total")
                     }
-                    .frame(height: 18)
-                } else {
-                    HStack(spacing: 16) {
-                        Stat(label: "settled", value: "\(heatmap.settledDays)d · \(Money.whole(heatmap.totalAmount))")
-                        if let peak = heatmap.peakLabel { Stat(label: "peak", value: peak) }
-                        if let busiest = heatmap.busiestWeekday { Stat(label: "busiest", value: busiest) }
-                        if let fh = heatmap.firstHalfPercent { Stat(label: "1st–15th", value: "\(fh)%") }
-                        Spacer(minLength: 0)
-                    }
-                    .frame(height: 18)
-                    .help("\(heatmap.totalChargeCount) charges recorded in total")
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
             }
+            .frame(maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading)
         }
     }
 }
@@ -1031,7 +1128,7 @@ private struct CalendarDaySquare: View {
         RoundedRectangle(cornerRadius: 3.5)
             .fill(Self.shade(cell?.amount, max: maxAmount))
             .frame(maxWidth: .infinity)
-            .frame(height: 19)
+            .frame(height: 18)
             .overlay(
                 RoundedRectangle(cornerRadius: 3.5)
                     .strokeBorder(isSelected ? DS.amber : Color.clear, lineWidth: 1.2)

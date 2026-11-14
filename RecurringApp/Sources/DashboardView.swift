@@ -20,7 +20,7 @@ struct DashboardView: View {
                     ScrollViewReader { proxy in
                         ScrollView(.vertical, showsIndicators: true) {
                             activeSurface
-                                .padding(26)
+                                .padding(DS.pagePadding)
                         }
                         .onChange(of: store.explorer.scrollRequestID) { _, _ in
                             withAnimation(.easeOut(duration: 0.22)) {
@@ -35,7 +35,7 @@ struct DashboardView: View {
                 } else if viewportHeight != nil {
                     GeometryReader { geo in
                         activeSurface
-                            .padding(26)
+                            .padding(DS.pagePadding)
                             .frame(width: geo.size.width, alignment: .top)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -51,7 +51,7 @@ struct DashboardView: View {
                     }
                 } else {
                     activeSurface
-                        .padding(26)
+                        .padding(DS.pagePadding)
                 }
             }
         }
@@ -150,8 +150,8 @@ struct DashboardView: View {
                 }
             }
         }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 14)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
         .background(DS.surface)
     }
 
@@ -195,7 +195,7 @@ struct DashboardView: View {
     @ViewBuilder
     private var ledgerSurface: some View {
         if let ledger = store.ledger, let d = store.derived {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: DS.gridGap) {
                 kpis(ledger, derived: d)
                 BurnAllocationBar(burn: d.burn, explorer: store.explorer)
                 RenewalsPanel(
@@ -204,7 +204,32 @@ struct DashboardView: View {
                     today: store.today,
                     onSelectService: { store.explorer.focusService($0) }
                 )
-                HStack(alignment: .top, spacing: 18) {
+
+                // Bento Row A: Run-Rate Savings + Allocation & Commitment Donut (matched height)
+                HStack(alignment: .top, spacing: DS.gridGap) {
+                    SavingsPanel(
+                        savings: d.savings,
+                        now: d.monthlyTotal,
+                        closingCount: ledger.closing.count,
+                        cutsByMonth: d.cutsByMonth,
+                        fillHeight: true
+                    )
+                    SpendShapePanel(
+                        burn: d.burn,
+                        explorer: store.explorer,
+                        fillHeight: true
+                    )
+                }
+                .fixedSize(horizontal: false, vertical: true)
+
+                // Bento Row B: Overlap Consolidation + Recovery & Post-Cancel Guardrails (matched height)
+                HStack(alignment: .top, spacing: DS.gridGap) {
+                    CutPanel(
+                        groups: d.cutGroups,
+                        rowMeta: d.rowMeta,
+                        explorer: store.explorer,
+                        fillHeight: true
+                    )
                     MoneyBackPanel(
                         claims: d.refundClaims,
                         pendingTotal: d.pendingRefunds,
@@ -215,60 +240,63 @@ struct DashboardView: View {
                         clearedNames: d.clearedWatchNames,
                         displayNames: d.displayNames,
                         today: store.today,
+                        fillHeight: true,
                         onSelectService: { store.explorer.focusService($0) }
                     )
-                    SavingsPanel(
-                        savings: d.savings,
-                        now: d.monthlyTotal,
-                        closingCount: ledger.closing.count,
-                        cutsByMonth: d.cutsByMonth
-                    )
                 }
-                HStack(alignment: .top, spacing: 18) {
-                    CutPanel(
-                        groups: d.cutGroups,
-                        rowMeta: d.rowMeta,
-                        explorer: store.explorer
-                    )
-                    SpendShapePanel(
-                        burn: d.burn,
-                        explorer: store.explorer
-                    )
-                }
+                .fixedSize(horizontal: false, vertical: true)
+
                 CashOutPanel(
                     cashFlow: d.cashFlow,
                     monthlyRunRate: d.monthlyTotal,
                     today: store.today
                 )
-                HStack(alignment: .top, spacing: 18) {
-                    ChargeCalendarPanel(
-                        heatmap: d.calendarHeatmap,
-                        onSelectServiceID: { sid in
-                            if let svc = d.servicesByID[sid] {
-                                store.explorer.focusService(svc)
+
+                // Bento Masonry Grid C: Left (Calendar + Term Windows) | Right (Attribution + Triage + Billing Windows)
+                HStack(alignment: .top, spacing: DS.gridGap) {
+                    VStack(alignment: .leading, spacing: DS.gridGap) {
+                        ChargeCalendarPanel(
+                            heatmap: d.calendarHeatmap,
+                            onSelectServiceID: { sid in
+                                if let svc = d.servicesByID[sid] {
+                                    store.explorer.focusService(svc)
+                                }
                             }
-                        }
-                    )
-                    PaymentAttributionPanel(
-                        burn: d.burn,
-                        splitByCard: $splitByCard,
-                        explorer: store.explorer
-                    )
+                        )
+                        TermsPanel(
+                            items: d.termWindows,
+                            domainRollup: d.domainRollup,
+                            fillHeight: true,
+                            onSelectService: { store.explorer.focusService($0) }
+                        )
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+                    VStack(alignment: .leading, spacing: DS.gridGap) {
+                        PaymentAttributionPanel(
+                            burn: d.burn,
+                            splitByCard: $splitByCard,
+                            explorer: store.explorer
+                        )
+                        NeedsLookPanel(
+                            ledger: ledger,
+                            displayNames: d.displayNames,
+                            scrollable: scrollable,
+                            onSelectService: { store.explorer.focusService($0) },
+                            onClearCheck: { store.clearCheck($0.id) }
+                        )
+                        CadenceExposurePanel(
+                            ledger: ledger,
+                            derived: d,
+                            vaultKeysByServiceID: store.vault.keysByServiceID,
+                            fillHeight: true,
+                            onOpenVault: { store.selectedTab = .vault }
+                        )
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
-                HStack(alignment: .top, spacing: 18) {
-                    TermsPanel(
-                        items: d.termWindows,
-                        domainRollup: d.domainRollup,
-                        onSelectService: { store.explorer.focusService($0) }
-                    )
-                    NeedsLookPanel(
-                        ledger: ledger,
-                        displayNames: d.displayNames,
-                        scrollable: scrollable,
-                        onSelectService: { store.explorer.focusService($0) },
-                        onClearCheck: { store.clearCheck($0.id) }
-                    )
-                }
+                .fixedSize(horizontal: false, vertical: true)
+
                 LedgerExplorerPanel(
                     ledger: ledger,
                     derived: d,
@@ -292,20 +320,31 @@ struct DashboardView: View {
         let since = DayText.short(sv.since)
         let cutMin = d.cutGroups.map(\.saveMin).reduce(0, +)
         let committedMo = d.burn.multiMonthMonthly + d.burn.prepaidTermMonthly
+        let openRefundCount = d.refundClaims.filter(\.claim.isPending).count
 
-        return HStack(spacing: 12) {
+        let moneyBackDelta: (String, Color) = {
+            if !d.lateWatch.isEmpty {
+                return ("⚠ \(d.lateWatch.count) charged after cancel", DS.coral)
+            }
+            if openRefundCount > 0 {
+                return ("↻ \(openRefundCount) refund claim\(openRefundCount == 1 ? "" : "s") open", DS.amber)
+            }
+            return ("✓ 0 post-cancel leaks", DS.mint)
+        }()
+
+        return HStack(spacing: DS.gridGap) {
             KPI(
                 label: "Monthly burn",
                 value: Money.exact(d.monthlyTotal),
                 caption: "Fixed \(Money.whole(d.burn.fixedMonthly)) · Usage \(Money.whole(d.burn.usageMonthly)) · Term \(Money.whole(committedMo))",
-                delta: sv.monthly > 0 ? "▼ \(Money.exact(sv.monthly)) since \(since)" : nil,
+                delta: sv.monthly > 0 ? "▼ \(Money.exact(sv.monthly)) since \(since)" : "● \(ledger.active.count) active plans",
                 accent: DS.amber
             )
             KPI(
                 label: "Annualized",
                 value: Money.whole(d.monthlyTotal * 12),
                 caption: "\(ledger.active.count) active · \(ledger.closing.count) closing",
-                delta: sv.monthly > 0 ? "▼ \(Money.whole(sv.yearly))/yr saved" : nil
+                delta: sv.monthly > 0 ? "▼ \(Money.whole(sv.yearly))/yr saved" : "● \(Money.exact(d.monthlyTotal))/mo run-rate"
             )
             KPI(
                 label: "Next 30 days",
@@ -313,24 +352,27 @@ struct DashboardView: View {
                 caption: "7d: \(Money.whole(radar.total7d)) (\(radar.count7d)) · \(radar.bigRenewals.count) of \(Money.whole(Insights.bigRenewal))+",
                 delta: radar.bigRenewals.first.map {
                     "next: \(d.displayNames[$0.service.id] ?? $0.service.name) · \(DayText.short($0.date))"
-                },
+                } ?? "✓ No $50+ renewals queued",
                 deltaColor: DS.amber
             )
             KPI(
                 label: "Money back",
                 value: Money.exact(d.totalMoneyBack),
-                caption: "\(Self.plural(d.refundClaims.filter(\.claim.isPending).count, "refund")) · \(d.lateWatch.count) late · \(d.watchingItems.count) watching",
+                caption: "\(Self.plural(openRefundCount, "refund")) · \(d.lateWatch.count) late · \(d.watchingItems.count) watching",
+                delta: moneyBackDelta.0,
+                deltaColor: moneyBackDelta.1,
                 valueColor: d.totalMoneyBack > 0 ? DS.coral : DS.ink
             )
             KPI(
                 label: "Kept & cuttable",
                 value: Money.exact(sv.kept),
                 caption: "avoided charges since \(since)",
-                delta: cutMin > 0 ? "✂ \(Money.whole(cutMin))/mo across \(d.cutGroups.count) overlaps" : nil,
+                delta: cutMin > 0 ? "✂ \(Money.whole(cutMin))/mo across \(d.cutGroups.count) overlaps" : "✓ Zero overlap detected",
                 deltaColor: DS.mint,
                 valueColor: sv.kept > 0 ? DS.mint : DS.ink
             )
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     static func plural(_ n: Int, _ word: String) -> String { "\(n) \(word)\(n == 1 ? "" : "s")" }
@@ -400,8 +442,8 @@ private struct BurnAllocationBar: View {
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
         .background(RoundedRectangle(cornerRadius: DS.radiusCard).fill(DS.surface))
         .overlay(RoundedRectangle(cornerRadius: DS.radiusCard).strokeBorder(DS.border, lineWidth: 1))
     }
@@ -533,7 +575,7 @@ struct CashOutPanel: View {
                     RuleMark(x: .value("Today", today))
                         .foregroundStyle(DS.amber)
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                        .annotation(position: .top, alignment: .leading) {
+                        .annotation(position: .top, alignment: .leading, spacing: 2) {
                             Text("TODAY")
                                 .font(DS.mono(9, weight: .bold))
                                 .foregroundStyle(DS.amber)
@@ -545,6 +587,7 @@ struct CashOutPanel: View {
                             .lineStyle(StrokeStyle(lineWidth: 34))
                     }
                 }
+                .padding(.top, 10)
                 .chartForegroundStyleScale(domain: cashFlow.categories, range: cashFlow.categories.map(DS.categoryColor))
                 .chartLegend(position: .bottom, alignment: .leading, spacing: 10)
                 .chartXAxis {
@@ -588,38 +631,41 @@ struct CashOutPanel: View {
                             }
                     }
                 }
-                .frame(height: 250)
+                .frame(height: 210)
 
-                HStack(spacing: 16) {
+                HStack(spacing: 14) {
                     Text(DayText.month(selDate))
-                        .font(DS.display(12, weight: .semibold))
+                        .font(DS.display(11.5, weight: .semibold))
                         .foregroundStyle(DS.ink)
                     Text(Money.exact(total))
-                        .font(DS.mono(12, weight: .semibold))
+                        .font(DS.mono(11.5, weight: .semibold))
                         .foregroundStyle(DS.amber)
                     if charged > 0 {
                         Text("settled \(Money.exact(charged))")
-                            .font(DS.mono(11))
+                            .font(DS.mono(10.5))
                             .foregroundStyle(DS.ink2)
                     }
                     if sched > 0 {
                         Text("scheduled \(Money.exact(sched))")
-                            .font(DS.mono(11))
+                            .font(DS.mono(10.5))
                             .foregroundStyle(DS.ink3)
                     }
                     if abs(deltaVsRunRate) >= 25 {
                         Text(deltaVsRunRate > 0
                              ? "+\(Money.whole(deltaVsRunRate)) vs avg mo (annual/term spike)"
                              : "−\(Money.whole(abs(deltaVsRunRate))) below avg mo")
-                            .font(DS.mono(10.5))
+                            .font(DS.mono(10))
                             .foregroundStyle(deltaVsRunRate > 0 ? DS.amber : DS.mint)
                     }
                     Spacer()
                     Text("hover month")
-                        .font(DS.mono(10))
+                        .font(DS.mono(9.5))
                         .foregroundStyle(DS.ink3)
                 }
-                .frame(height: 18)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
             }
         }
     }
@@ -663,8 +709,6 @@ private struct PaymentAttributionPanel: View {
                     }
                 }
 
-                Rectangle().fill(DS.borderSubtle).frame(height: 1).padding(.top, 4)
-
                 HStack(spacing: 14) {
                     if let topCard {
                         Stat(
@@ -680,6 +724,10 @@ private struct PaymentAttributionPanel: View {
                     }
                     Spacer(minLength: 0)
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
             }
         }
     }
@@ -742,15 +790,18 @@ private struct AttributionBarRow: View {
 private struct TermsPanel: View {
     let items: [TermWindowItem]
     let domainRollup: DomainRollupData?
+    var fillHeight: Bool = false
     let onSelectService: (Service) -> Void
 
     var body: some View {
+        let upfrontPrincipal = items.compactMap(\.service.amount).reduce(0, +) + (domainRollup?.yearlyTotal ?? 0)
         DSPanel(
             eyebrow: "PREPAID & ANNUAL",
             title: "Multi-month & yearly windows",
-            subtitle: "Upfront commitments and elapsed runway · click any row to inspect"
+            subtitle: "Upfront commitments and elapsed runway · click any row to inspect",
+            fillHeight: fillHeight
         ) {
-            VStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 9) {
                 ForEach(items) { item in
                     TermRow(item: item) {
                         onSelectService(item.service)
@@ -759,7 +810,23 @@ private struct TermsPanel: View {
                 if let rollup = domainRollup {
                     DomainSummaryRow(rollup: rollup)
                 }
+
+                Spacer(minLength: 6)
+
+                HStack(spacing: 14) {
+                    Stat(label: "committed principal", value: Money.exact(upfrontPrincipal))
+                    Stat(label: "windows", value: "\(items.count)\(domainRollup.map { " + \($0.domains.count) dom" } ?? "")")
+                    if let soonest = items.map(\.daysLeft).min() {
+                        Stat(label: "nearest", value: "in \(soonest)d")
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
             }
+            .frame(maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading)
         }
     }
 }
@@ -858,7 +925,7 @@ private struct NeedsLookPanel: View {
     let onSelectService: (Service) -> Void
     let onClearCheck: (Service) -> Void
 
-    @State private var bucket: Bucket = .toCheck
+    @State private var bucket: Bucket = .all
 
     enum Bucket: String, CaseIterable {
         case toCheck = "To check"
@@ -959,6 +1026,124 @@ private struct NeedsLookPanel: View {
                     }
                 }
             }
+        }
+    }
+}
+
+// MARK: - Billing-Day Window Concentration & Vault Key Coverage
+
+private struct CadenceExposurePanel: View {
+    let ledger: Ledger
+    let derived: Store.Derived
+    let vaultKeysByServiceID: [String: [VaultKeyItem]]
+    var fillHeight: Bool = false
+    let onOpenVault: () -> Void
+
+    private struct WindowSlice: Identifiable {
+        let id: String
+        let label: String
+        let monthly: Double
+        let count: Int
+        let color: Color
+    }
+
+    var body: some View {
+        var d1_7 = (0.0, 0)
+        var d8_15 = (0.0, 0)
+        var d16_23 = (0.0, 0)
+        var d24_31 = (0.0, 0)
+        var termOrVar = (0.0, 0)
+        var linkedPlanCount = 0
+        var totalKeyCount = 0
+
+        for s in ledger.active {
+            let mo = derived.rowMeta[s.id]?.monthlyEquiv ?? 0
+            if let k = vaultKeysByServiceID[s.id], !k.isEmpty {
+                linkedPlanCount += 1
+                totalKeyCount += k.count
+            }
+            if let day = s.billingDay, [.monthly, .usage].contains(s.cadence) {
+                switch day {
+                case 1...7:   d1_7.0 += mo; d1_7.1 += 1
+                case 8...15:  d8_15.0 += mo; d8_15.1 += 1
+                case 16...23: d16_23.0 += mo; d16_23.1 += 1
+                default:      d24_31.0 += mo; d24_31.1 += 1
+                }
+            } else {
+                termOrVar.0 += mo; termOrVar.1 += 1
+            }
+        }
+
+        let slices: [WindowSlice] = [
+            WindowSlice(id: "w1", label: "Days 1–7", monthly: d1_7.0, count: d1_7.1, color: DS.amber),
+            WindowSlice(id: "w2", label: "Days 8–15", monthly: d8_15.0, count: d8_15.1, color: DS.cyan),
+            WindowSlice(id: "w3", label: "Days 16–23", monthly: d16_23.0, count: d16_23.1, color: DS.mint),
+            WindowSlice(id: "w4", label: "Days 24–31", monthly: d24_31.0, count: d24_31.1, color: DS.violet),
+            WindowSlice(id: "wt", label: "Annual & term", monthly: termOrVar.0, count: termOrVar.1, color: DS.ink2),
+        ]
+        let maxWin = max(slices.map(\.monthly).max() ?? 1, 0.01)
+        let totalMo = max(derived.monthlyTotal, 0.01)
+
+        return DSPanel(
+            eyebrow: "BILLING WINDOWS & VAULT COVERAGE",
+            title: "Intra-month cycle exposure",
+            subtitle: "Monthly billing-day clusters across active plans + encrypted Vault API key coverage",
+            fillHeight: fillHeight
+        ) {
+            Button(action: onOpenVault) {
+                DSStatusPill(text: "\(totalKeyCount) VAULT KEYS", tint: DS.mint)
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+        } content: {
+            VStack(alignment: .leading, spacing: 7) {
+                ForEach(slices) { w in
+                    HStack(spacing: 10) {
+                        Text(w.label)
+                            .font(DS.mono(10.5, weight: .medium))
+                            .foregroundStyle(DS.ink2)
+                            .frame(width: 104, alignment: .leading)
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 3).fill(DS.well).frame(height: 9)
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(w.color.opacity(0.9))
+                                    .frame(width: max(3, geo.size.width * w.monthly / maxWin), height: 9)
+                            }
+                            .frame(maxHeight: .infinity, alignment: .center)
+                        }
+                        .frame(height: 15)
+                        Text(SpendShapePanel.percent(w.monthly / totalMo))
+                            .font(DS.mono(10))
+                            .foregroundStyle(DS.ink3)
+                            .frame(width: 34, alignment: .trailing)
+                        Text(Money.exact(w.monthly))
+                            .font(DS.mono(11, weight: .semibold))
+                            .foregroundStyle(DS.ink)
+                            .frame(width: 78, alignment: .trailing)
+                        Text("\(w.count)")
+                            .font(DS.mono(10))
+                            .foregroundStyle(DS.ink3)
+                            .frame(width: 22, alignment: .trailing)
+                    }
+                }
+
+                Spacer(minLength: 4)
+
+                HStack(spacing: 14) {
+                    Stat(label: "vault-backed", value: "\(linkedPlanCount) plans · \(totalKeyCount) keys")
+                    Stat(label: "auto-renew", value: "\(ledger.active.filter { $0.cadence != .term && !$0.isClosing }.count)")
+                    if !ledger.closing.isEmpty {
+                        Stat(label: "closing", value: "\(ledger.closing.count)")
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.borderSubtle, lineWidth: 1))
+            }
+            .frame(maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading)
         }
     }
 }
@@ -1556,7 +1741,7 @@ private struct ServiceInspectorDrawer: View {
         let sortedCharges = s.charges.sorted { $0.date > $1.date }
         let totalSettled = s.charges.map(\.amount).reduce(0, +)
 
-        HStack(alignment: .top, spacing: 20) {
+        HStack(alignment: .top, spacing: 14) {
             // Column 1: Charge History & Sparkline
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -1737,38 +1922,37 @@ struct KPI: View {
     var accent: Color? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 4) {
             DSEyebrow(text: label, color: accent ?? DS.ink3)
             Text(value)
-                .font(DS.display(26, weight: .bold))
+                .font(DS.display(24, weight: .bold))
                 .foregroundStyle(valueColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
             if let delta {
                 Text(delta)
-                    .font(DS.mono(10.5, weight: .semibold))
+                    .font(DS.mono(10, weight: .semibold))
                     .foregroundStyle(deltaColor)
                     .lineLimit(1)
             }
+            Spacer(minLength: 2)
             Text(caption)
-                .font(DS.display(11))
+                .font(DS.display(10.5))
                 .foregroundStyle(DS.ink3)
-                .lineLimit(2)
+                .lineLimit(1)
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(13)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: DS.radiusCard).fill(DS.surface))
         .overlay(alignment: .top) {
-            if let accent {
-                UnevenRoundedRectangle(
-                    topLeadingRadius: DS.radiusCard,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: DS.radiusCard
-                )
-                .fill(accent)
-                .frame(height: 2)
-            }
+            UnevenRoundedRectangle(
+                topLeadingRadius: DS.radiusCard,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 0,
+                topTrailingRadius: DS.radiusCard
+            )
+            .fill((accent ?? Color.white).opacity(accent != nil ? 0.9 : 0.04))
+            .frame(height: accent != nil ? 2 : 1)
         }
         .overlay(RoundedRectangle(cornerRadius: DS.radiusCard).strokeBorder(DS.border, lineWidth: 1))
     }

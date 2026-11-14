@@ -29,10 +29,13 @@ enum DS {
     static let cyan = Color(hex: 0x4EA8FF)
     static let violet = Color(hex: 0x9B8AFB)
 
-    // MARK: Radii
+    // MARK: Radii & Bento Grid Metrics
     static let radiusCard: CGFloat = 10
-    static let radiusWell: CGFloat = 7
+    static let radiusWell: CGFloat = 6
     static let radiusPill: CGFloat = 5
+    static let gridGap: CGFloat = 8
+    static let pagePadding: CGFloat = 12
+    static let panelPadding: CGFloat = 14
 
     // MARK: Categories (high-contrast on #0A0B0D)
     static let categoryOrder = [
@@ -299,29 +302,52 @@ struct DSProviderGlyph: View {
         return exists
     }
 
+    private var normalizedSlug: String {
+        provider.lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "_", with: "-")
+    }
+
     private var assetName: String {
-        let slug = provider.lowercased()
+        let slug = normalizedSlug
         switch slug {
-        case "anthropic": return "provider-anthropic"
-        case "openai": return "provider-openai"
-        case "google": return "provider-google"
+        case "anthropic", "claude": return "provider-anthropic"
+        case "openai", "chatgpt": return "provider-openai"
+        case "google", "google-ai-ultra", "google-cloud", "gemini", "gcp", "vertex": return "provider-google"
         case "openrouter": return "provider-openrouter"
-        case "xai": return "provider-xai"
+        case "xai", "grok", "xai-grok", "supergrok": return "provider-xai"
         case "groq": return "provider-groq"
         case "github": return "provider-github"
         case "stripe": return "provider-stripe"
         case "vercel": return "provider-vercel"
         case "cloudflare": return "provider-cloudflare"
         case "supabase": return "provider-supabase"
-        case "flyio": return "provider-flyio"
-        case "huggingface": return "provider-huggingface"
+        case "flyio", "fly", "fly-io", "flydotio": return "provider-flydotio"
+        case "huggingface", "hf": return "provider-huggingface"
         case "perplexity": return "provider-perplexity"
         case "resend": return "provider-resend"
+        case "aws", "amazon": return "provider-aws"
+        case "cohere": return "provider-cohere"
+        case "datadog": return "provider-datadog"
+        case "fireworks": return "provider-fireworks"
+        case "mistral": return "provider-mistral"
+        case "mongodb": return "provider-mongodb"
+        case "pinecone": return "provider-pinecone"
+        case "postmark": return "provider-postmark"
+        case "railway": return "provider-railway"
+        case "replicate": return "provider-replicate"
+        case "sentry": return "provider-sentry"
+        case "shopify": return "provider-shopify"
+        case "slack": return "provider-slack"
+        case "twilio": return "provider-twilio"
+        case "wandb": return "provider-wandb"
+        case "zoom": return "provider-zoom"
         default: return "provider-\(slug)"
         }
     }
 
     var body: some View {
+        let slug = normalizedSlug
         let name = assetName
         if Self.hasAsset(name) {
             Image(name)
@@ -330,6 +356,22 @@ struct DSProviderGlyph: View {
                 .scaledToFit()
                 .frame(width: size, height: size)
                 .foregroundStyle(DS.ink)
+        } else if ["xai", "grok", "xai-grok", "supergrok"].contains(slug) {
+            Canvas { ctx, sz in
+                let w = sz.width
+                let h = sz.height
+                var slash = Path()
+                slash.move(to: CGPoint(x: w * 0.18, y: h * 0.86))
+                slash.addLine(to: CGPoint(x: w * 0.82, y: h * 0.14))
+                ctx.stroke(slash, with: .color(DS.ink), style: StrokeStyle(lineWidth: max(1.8, size * 0.14), lineCap: .round))
+                var cross = Path()
+                cross.move(to: CGPoint(x: w * 0.18, y: h * 0.18))
+                cross.addLine(to: CGPoint(x: w * 0.45, y: h * 0.48))
+                cross.move(to: CGPoint(x: w * 0.57, y: h * 0.60))
+                cross.addLine(to: CGPoint(x: w * 0.82, y: h * 0.86))
+                ctx.stroke(cross, with: .color(DS.ink2), style: StrokeStyle(lineWidth: max(1.5, size * 0.11), lineCap: .round))
+            }
+            .frame(width: size, height: size)
         } else {
             Image(systemName: "key.horizontal.fill")
                 .font(.system(size: size * 0.78, weight: .semibold))
@@ -339,11 +381,32 @@ struct DSProviderGlyph: View {
     }
 }
 
+/// Machined 26x26 rounded provider tile used across Vault, Reimburse, and Sync tables.
+struct DSProviderBadge: View {
+    let provider: String
+    var tileSize: CGFloat = 26
+    var glyphSize: CGFloat = 14
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(DS.well)
+                .frame(width: tileSize, height: tileSize)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .strokeBorder(DS.border, lineWidth: 1)
+                )
+            DSProviderGlyph(provider: provider, size: glyphSize)
+        }
+    }
+}
+
 struct DSPanel<Content: View, Trailing: View>: View {
     var eyebrow: String? = nil
     let title: String
     var subtitle: String? = nil
     var accentBar: Color? = nil
+    var fillHeight: Bool = false
     @ViewBuilder var trailing: Trailing
     @ViewBuilder var content: Content
 
@@ -352,6 +415,7 @@ struct DSPanel<Content: View, Trailing: View>: View {
         title: String,
         subtitle: String? = nil,
         accentBar: Color? = nil,
+        fillHeight: Bool = false,
         @ViewBuilder trailing: () -> Trailing = { EmptyView() },
         @ViewBuilder content: () -> Content
     ) {
@@ -359,45 +423,48 @@ struct DSPanel<Content: View, Trailing: View>: View {
         self.title = title
         self.subtitle = subtitle
         self.accentBar = accentBar
+        self.fillHeight = fillHeight
         self.trailing = trailing()
         self.content = content()
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 13) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
                     if let eyebrow {
                         DSEyebrow(text: eyebrow, color: accentBar ?? DS.ink3)
                     }
                     Text(title)
-                        .font(DS.display(14.5, weight: .semibold))
+                        .font(DS.display(14, weight: .semibold))
                         .foregroundStyle(DS.ink)
                     if let subtitle {
                         Text(subtitle)
-                            .font(DS.display(11.5, weight: .regular))
+                            .font(DS.display(11, weight: .regular))
                             .foregroundStyle(DS.ink3)
+                            .lineLimit(2)
                     }
                 }
                 Spacer(minLength: 8)
                 trailing
             }
             content
+            if fillHeight {
+                Spacer(minLength: 0)
+            }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .padding(DS.panelPadding)
+        .frame(maxWidth: .infinity, maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: DS.radiusCard).fill(DS.surface))
         .overlay(alignment: .top) {
-            if let accentBar {
-                UnevenRoundedRectangle(
-                    topLeadingRadius: DS.radiusCard,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: DS.radiusCard
-                )
-                .fill(accentBar.opacity(0.85))
-                .frame(height: 2)
-            }
+            UnevenRoundedRectangle(
+                topLeadingRadius: DS.radiusCard,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 0,
+                topTrailingRadius: DS.radiusCard
+            )
+            .fill((accentBar ?? Color.white).opacity(accentBar != nil ? 0.85 : 0.04))
+            .frame(height: accentBar != nil ? 2 : 1)
         }
         .overlay(
             RoundedRectangle(cornerRadius: DS.radiusCard)

@@ -700,18 +700,21 @@ private struct PopoverSectionHeader: View {
             Text(title.uppercased())
                 .font(DS.mono(9.5, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(accent ?? DS.ink3)
+                .foregroundStyle(accent ?? DS.ink2)
                 .lineLimit(1)
             Spacer()
             if let trailing {
                 Text(trailing)
-                    .font(DS.mono(10.5, weight: .medium))
+                    .font(DS.mono(10.5, weight: .semibold))
                     .foregroundStyle(DS.ink2)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 10)
-        .padding(.bottom, 5)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 5.5)
+        .background(DS.well.opacity(0.32))
+        .overlay(alignment: .top) { Rectangle().fill(DS.borderSubtle).frame(height: 1) }
+        .overlay(alignment: .bottom) { Rectangle().fill(DS.borderSubtle).frame(height: 1) }
+        .padding(.bottom, 2)
     }
 }
 

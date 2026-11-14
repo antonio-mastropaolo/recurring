@@ -30,7 +30,7 @@ struct VaultView: View {
     @State private var revealedSecrets: [String: String] = [:]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: DS.gridGap) {
             healthStrip
             if !store.vault.unlocked {
                 lockedGateCard
@@ -58,7 +58,7 @@ struct VaultView: View {
 
     private var healthStrip: some View {
         let v = store.vault
-        return HStack(spacing: 12) {
+        return HStack(spacing: DS.gridGap) {
             VaultMetricCard(
                 eyebrow: "ACTIVE INVENTORY",
                 value: "\(v.activeKeys.count)",
@@ -90,69 +90,99 @@ struct VaultView: View {
                 accent: v.strayFindings.isEmpty ? DS.ink3 : DS.cyan
             )
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
-    // MARK: Inline Sentinel-Style Lock / Init Gate
+    // MARK: Inline Compact Sentinel Lock / Init Bar
 
     private var lockedGateCard: some View {
         let isInit = store.vault.initialized
-        return DSPanel(
-            eyebrow: isInit ? "VAULT LOCKED · AES-256-GCM + ARGON2ID" : "INITIALIZE VAULT · AES-256-GCM + ARGON2ID",
-            title: isInit
-                ? "Unlock vault to copy, reveal, add, rotate, or sweep live keys"
-                : "Create a master passphrase to arm encrypted API key storage",
-            subtitle: isInit
-                ? "Non-secret inventory & linked billing subscriptions remain browsable while locked. Compatible with your Sentinel passphrase."
-                : "Derived locally via Argon2id (64 MiB, 4 lanes); raw secrets never touch CLI argv or logs.",
-            accentBar: DS.amber
-        ) {
-            DSChipButton(title: "Import Sentinel DB", icon: "square.and.arrow.down") {
-                Task { await store.importSentinelVault() }
-            }
-        } content: {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 10) {
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 7)
+                        .fill(DS.amber.opacity(0.14))
+                        .frame(width: 32, height: 32)
+                        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(DS.amber.opacity(0.42), lineWidth: 1))
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(DS.amber)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    DSEyebrow(
+                        text: isInit ? "VAULT LOCKED · AES-256-GCM + ARGON2ID" : "INITIALIZE VAULT · AES-256-GCM + ARGON2ID",
+                        color: DS.amber
+                    )
+                    Text(isInit
+                         ? "Unlock 12h session to copy, reveal, add, rotate, or sweep live keys"
+                         : "Create a master passphrase to arm encrypted API key storage")
+                        .font(DS.display(12.5, weight: .semibold))
+                        .foregroundStyle(DS.ink)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 8)
+
+                HStack(spacing: 8) {
                     Image(systemName: "key.horizontal.fill")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(DS.amber)
                     Group {
                         if isSnapshotRender {
                             Text(isInit ? "Enter master passphrase…" : "Choose master passphrase (≥ 6 chars)…")
-                                .font(DS.mono(12.5))
+                                .font(DS.mono(11.5))
                                 .foregroundStyle(DS.ink3)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(width: 225, alignment: .leading)
                         } else {
                             SecureField(isInit ? "Enter master passphrase…" : "Choose master passphrase (≥ 6 chars)…", text: $passphrase)
                                 .textFieldStyle(.plain)
                                 .focusEffectDisabled()
-                                .font(DS.mono(12.5))
+                                .font(DS.mono(11.5))
                                 .foregroundStyle(DS.ink)
+                                .frame(width: 225)
                                 .onSubmit { submitUnlock() }
                         }
                     }
-                    .frame(maxWidth: 380)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
-                    .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well))
-                    .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.border, lineWidth: 1))
-
-                    DSChipButton(
-                        title: isUnlocking ? "Verifying…" : (isInit ? "Unlock 12h Session" : "Initialize Vault"),
-                        icon: "lock.open.fill",
-                        prominent: true,
-                        disabled: passphrase.isEmpty || isUnlocking
-                    ) {
-                        submitUnlock()
-                    }
-                    Spacer()
                 }
-                if let unlockError {
-                    Text(unlockError)
-                        .font(DS.display(11.5, weight: .medium))
-                        .foregroundStyle(DS.coral)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: DS.radiusWell).fill(DS.well))
+                .overlay(RoundedRectangle(cornerRadius: DS.radiusWell).strokeBorder(DS.border, lineWidth: 1))
+
+                DSChipButton(
+                    title: isUnlocking ? "Verifying…" : (isInit ? "Unlock 12h Session" : "Initialize Vault"),
+                    icon: "lock.open.fill",
+                    prominent: true,
+                    disabled: passphrase.isEmpty || isUnlocking
+                ) {
+                    submitUnlock()
+                }
+
+                DSChipButton(title: "Import Sentinel DB", icon: "square.and.arrow.down") {
+                    Task { await store.importSentinelVault() }
                 }
             }
+            if let unlockError {
+                Text(unlockError)
+                    .font(DS.display(11.5, weight: .medium))
+                    .foregroundStyle(DS.coral)
+            }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(RoundedRectangle(cornerRadius: DS.radiusCard).fill(DS.surface))
+        .overlay(alignment: .top) {
+            UnevenRoundedRectangle(
+                topLeadingRadius: DS.radiusCard,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 0,
+                topTrailingRadius: DS.radiusCard
+            )
+            .fill(DS.amber.opacity(0.88))
+            .frame(height: 2)
+        }
+        .overlay(RoundedRectangle(cornerRadius: DS.radiusCard).strokeBorder(DS.border, lineWidth: 1))
     }
 
     private func submitUnlock() {
@@ -322,7 +352,7 @@ struct VaultView: View {
             VStack(spacing: 0) {
                 ForEach(store.vault.strayFindings.prefix(18)) { sf in
                     HStack(spacing: 12) {
-                        DSProviderGlyph(provider: sf.provider, size: 15)
+                        DSProviderBadge(provider: sf.provider, tileSize: 24, glyphSize: 13)
                         Text(sf.providerLabel)
                             .font(DS.display(12, weight: .semibold))
                             .foregroundStyle(DS.ink)
@@ -562,19 +592,30 @@ private struct VaultMetricCard: View {
     let accent: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 4) {
             DSEyebrow(text: eyebrow, color: accent)
             Text(value)
-                .font(DS.display(26, weight: .bold))
+                .font(DS.display(24, weight: .bold))
                 .foregroundStyle(DS.ink)
+            Spacer(minLength: 2)
             Text(caption)
-                .font(DS.display(11))
+                .font(DS.display(10.5))
                 .foregroundStyle(DS.ink3)
                 .lineLimit(1)
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(13)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: DS.radiusCard).fill(DS.surface))
+        .overlay(alignment: .top) {
+            UnevenRoundedRectangle(
+                topLeadingRadius: DS.radiusCard,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 0,
+                topTrailingRadius: DS.radiusCard
+            )
+            .fill(accent.opacity(0.85))
+            .frame(height: 2)
+        }
         .overlay(RoundedRectangle(cornerRadius: DS.radiusCard).strokeBorder(DS.border, lineWidth: 1))
     }
 }
@@ -625,7 +666,7 @@ private struct VaultKeyRow: View {
     var body: some View {
         HStack(spacing: 10) {
             HStack(spacing: 9) {
-                DSProviderGlyph(provider: item.provider, size: 16)
+                DSProviderBadge(provider: item.provider, tileSize: 26, glyphSize: 14)
                 VStack(alignment: .leading, spacing: 1.5) {
                     Text(item.label)
                         .font(DS.display(12.5, weight: .medium))
@@ -732,7 +773,7 @@ private struct VaultKeyRow: View {
             .frame(width: 112, alignment: .trailing)
         }
         .opacity(item.isRevoked ? 0.52 : 1)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6.5)
         .padding(.horizontal, 4)
         .background(hovering ? DS.rowHover : Color.clear)
         .onHover { hovering = $0 }
