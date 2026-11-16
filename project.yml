@@ -23,6 +23,7 @@ targets:
       path: RecurringApp/Info.plist
       properties:
         LSUIElement: true
+        ThawInPlacePanel: true
         NSPrincipalClass: NSApplication
         CFBundleName: Recurring v3
         CFBundleDisplayName: Recurring v3

@@ -16,6 +16,8 @@ struct RecurringApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
+    /// Opens the popover where Thaw's Thaw Bar asks (see ThawInPlacePanel.swift).
+    private var inPlace: ThawInPlacePanel?
     private var store: Store!
     private let reminders = Reminders()
     private var cancellables = Set<AnyCancellable>()
@@ -73,6 +75,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 .environmentObject(reminders)
                 .frame(width: 420, height: 640)
         )
+        inPlace = ThawInPlacePanel(popover: popover, willShow: { [weak self] in self?.store.reload(force: false) })
+        inPlace?.start()
 
         store.$derived
             .combineLatest(store.$vault)
